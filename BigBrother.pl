@@ -47,9 +47,8 @@ sub logout {
 	my $content = $mech->content();
 
 	my $logout;
-	if ($content =~ /(logout\.php(.+?)")/) {
+	if ($content =~ /(logout\.php.+?)"/) {
 		$logout = $1;
-		$logout =~ s/"$//g;
 	}
 	
 	$mech->get($root_url . $logout) or die "Error logging out\n";
