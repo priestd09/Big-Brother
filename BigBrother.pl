@@ -7,6 +7,7 @@ use WWW::Mechanize;
 my $mech = WWW::Mechanize->new;
 $mech->agent_alias('Linux Mozilla');
 $mech->cookie_jar(HTTP::Cookies->new());
+$mech->proxy('http', 'http://localhost:8118'); # Use TOR proxy
 
 my $email = 'name@email';
 my $password = 'pass';
