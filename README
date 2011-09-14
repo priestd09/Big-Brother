@@ -1,16 +1,20 @@
-What Big-Brother should do:
+Goal: harvest and analyse as much information on people from Facebook as possible.
 
-1) Set a random school in your profile
-1) Add random people from "your school".
-Some of them accept request and are now your friends.
-2) Add the friends of your new friends and now the ones you add will see that you have mutual friend(s), 
-therefore are more likely to accept your friend request.
-3) If friend request accepted, get all information (emails, location, interest, family members etc.) and...
-4) push to SQL database. (MySQL or PostgreSQL?)
+How will we achieve this goal?
+ Short term:
+  - Use proxies (TOR + Privoxy)
+  - Use delays to evade blocking
+ Medium term:
+  - Create multiple accounts and switch between them, so that we can harvest even while other accounts are "waiting" (later stage)
+ Long term:
+  - Publish our data in an interesting way (include graphs, for example)
+  - Compare our data with a evil-standard (the amount of/which information we need to potentially cause evil)
+  - Analyse efficiency (percentage of people accepting friend requests, percentage of people publicly displaying date of birth)
+  - Combine with other social media sites (Twitter)
 
-*Use proxies
-*Switch accounts because more accounts = more info and we have to have delays anyway
-We can harvest while other accounts are waiting, but multiple accounts of a later stage, I guess.
-*Use delay when adding (think days when adding lots of people)
-
-We should also publish our data in an interesting way (graphs and shit) and have some sort of standard, to show "with this information, we could do some nasty things".
+General program flow:
+1. Set a random school in the profile.
+2. Add random people from the school. Some will become your friends.
+3. Add the friends of the newly made friends. These will see that they have mutual friend(s) and are therefore more likely to accept the friend request.
+4. Harvest information from the profiles from friends (step 1-3 are required) and publicly visible profiles (no prerequisites)
+5. Store the information in a SQL database.
