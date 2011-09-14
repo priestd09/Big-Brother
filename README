@@ -1,0 +1,16 @@
+What Big-Brother should do:
+
+1) Set a random school in your profile
+1) Add random people from "your school".
+Some of them accept request and are now your friends.
+2) Add the friends of your new friends and now the ones you add will see that you have mutual friend(s), 
+therefore are more likely to accept your friend request.
+3) If friend request accepted, get all information (emails, location, interest, family members etc.) and...
+4) push to SQL database. (MySQL or PostgreSQL?)
+
+*Use proxies
+*Switch accounts because more accounts = more info and we have to have delays anyway
+We can harvest while other accounts are waiting, but multiple accounts of a later stage, I guess.
+*Use delay when adding (think days when adding lots of people)
+
+We should also publish our data in an interesting way (graphs and shit) and have some sort of standard, to show "with this information, we could do some nasty things".
