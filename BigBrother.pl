@@ -19,6 +19,7 @@ my $index_url = $root_url . 'index.php';
 my $profile_url = $root_url . 'profile.php';
 my $connect_url = $root_url . 'connect.php?id='; # followed with id number
 my $findfr_url = $root_url . 'findfriends.php'; # which we got from this url
+my $tries = 0;
 
 login($email, $password);
 logout();
@@ -26,7 +27,11 @@ logout();
 sub get {
 	my $url = $_[0];
 	$mech->get($url);
-	get() unless ($mech->success());
+	$tries ++;
+	if ($tries < 3) {
+		get() unless ($mech->success());
+	}
+	$tries = 0;
 }
 
 sub login {
