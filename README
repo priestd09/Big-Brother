@@ -15,7 +15,7 @@ How will we achieve this goal?
   - Combine with other social media sites (Twitter)
 
 General program flow:
-1. Set a random school in the profile.
+1. Generate a profile (including a random school), so it looks genuine.
 2. Add random people from the school. Some will become your friends.
 3. Add the friends of the newly made friends. These will see that they have mutual friend(s) and are therefore more likely to accept the friend request.
 4. Harvest information from the profiles from friends (step 1-3 are required) and publicly visible profiles (no prerequisites)
