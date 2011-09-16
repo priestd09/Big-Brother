@@ -18,15 +18,17 @@ my $root_url = 'http://m.facebook.com/';
 my $index_url = $root_url . 'index.php';
 my $profile_url = $root_url . 'profile.php';
 my $connect_url = $root_url . 'connect.php?id='; # followed with id number
-my $findfr_url = $root_url . 'findnetfriends.php'; # which we got from this url
+my $findcm_url = $root_url . 'findnetfriends.php'; # which we got from this url
 my $tries = 0;
 
 login($email, $password);
-find_friends("California", 2005);
+find_classmates('California', 2005);
 logout();
 
 sub get_content {
 	my $url = $_[0];
+	$url =~ s/&amp;/&/g; # Decode &, so that URLs are actually correct 
+
 	$mech->get($url);
 	$tries ++;
 	if (($tries < 3) and (!$mech->success())) {
@@ -34,16 +36,17 @@ sub get_content {
 		get_content($url)
 	}
 	$tries = 0;
+
 	return $mech->content();
 }
 
 sub login {
-	my $content = get_content($index_url);
+	get_content($index_url);
 
 	my $response = $mech->submit_form(
 	  fields => {
-	    email => $_[0],
-	    pass => $_[1]
+	    'email' => $_[0],
+	    'pass'  => $_[1]
 	  }
 	);
 }
@@ -51,27 +54,67 @@ sub login {
 sub logout {
 	my $content = get_content($index_url);
 
-	my $logout;
 	if ($content =~ /(logout\.php.+?)"/) {
-		$logout = $1;
+		get_content($root_url . $1);
 	}
-	
-	get_content($root_url . $logout);
 }
 
-# Not yet in use subs
+sub find_classmates {
+	get_content($findcm_url);
 
-sub find_friends {
-	my $content = get_content($findfr_url);
+	# Using click() instead of submit_form()
+	# From the FAQ: 'Try using $mech->click() instead of $mech->submit() or vice-versa.'
+	#
+	# Proposal: use click() all the time now?
+	#
+	$mech->form_number(1);
+	$mech->set_fields('sf_text_field' => $_[0], 'sf_year_field' => $_[1]);
+	my $response = $mech->click();
+	#
+	# To do: pick a random school + classmates 
+	#
+	add_high_school();
+}
 
-	my $response = $mech->submit_form(
-	  fields => {
-	    sf_text_field => $_[0], # search field
-		sf_year_field => $_[1] # year field
-	  }
-	);
+# Subroutine to add the high school to the profile
+#
+# To do: supply randomly picked school and year
+#
+sub add_high_school {
+	get_content('http://m.facebook.com/editprofile/exp/edu/index.php?st=10');
 
-	print $response->decoded_content;
+	$mech->form_number(1);
+	my $high_school = 'California High School'; # No supply from find_classmates() yet.
+	$mech->field('query', $high_school);
+	my $response = $mech->click();
+
+	if ($response->decoded_content =~ /<a href="\/(editprofile.+?)">$high_school/) {
+		get_content($root_url . $1);
+	}
+	
+	$mech->form_number(1);
+	my $grad_year = 2005;
+	$mech->field('grad_year', $grad_year);
+	$response = $mech->click();
+}
+
+
+# This is more of a debugging function, it checks for the names and values in all the forms on a webpage
+# I used it to check whether I was on the right page or not
+sub check_forms {
+	my @forms = $mech->forms() or die "Error!\n";
+	foreach (@forms) {
+		print "\n";
+		my $form = $_;
+		my @names = $form->param();
+		foreach (@names) {
+			print "$_\n";
+			my @values = $form->param($_);
+			foreach (@values) {
+					print "\t$_\n";
+			}
+		}
+	}
 }
 
 # no use for this yet but maybe in the future? :)
