@@ -10,8 +10,8 @@ $mech->agent_alias('Linux Mozilla');
 $mech->cookie_jar(HTTP::Cookies->new());
 #$mech->proxy('http', 'http://localhost:8118'); # Use TOR proxy
 
-my $email = 'coudraep@deagot.com';
-my $password = 'haidermary';
+my $email = 'mail@deagot.com';
+my $password = 'pass';
 
 # We use Facebook for mobile because it's easier to deal with
 my $root_url = 'http://m.facebook.com/';
