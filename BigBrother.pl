@@ -5,6 +5,7 @@ use warnings;
 use HTTP::Cookies;
 use WWW::Mechanize;
 
+$| = 1; # turn autoflush on
 my $mech = WWW::Mechanize->new;
 $mech->agent_alias('Linux Mozilla');
 $mech->cookie_jar(HTTP::Cookies->new());
@@ -17,7 +18,6 @@ my $password = 'pass';
 my $root_url = 'http://m.facebook.com/';
 my $index_url = $root_url . 'index.php';
 my $profile_url = $root_url . 'profile.php';
-my $connect_url = $root_url . 'connect.php?id='; # followed with id number
 my $findcm_url = $root_url . 'findnetfriends.php'; # which we got from this url
 my $tries = 0;
 
@@ -41,18 +41,23 @@ sub get_content {
 }
 
 sub login {
+    print "Logging in...";
     get_content($index_url);
 
     $mech->set_fields('email' => $_[0], 'pass' => $_[1]);
     $mech->click();
+
+    print "done!\n" if $mech->success();
 }
 
 sub logout {
+    print "Logging out...";
     my $content = get_content($index_url);
 
     if ($content =~ /(logout\.php.+?)"/) {
         get_content($root_url . $1);
     }
+    print "done!\n" if $mech->success();
 }
 
 sub find_classmates {
@@ -61,6 +66,7 @@ sub find_classmates {
     # - if we're gonna add multiple schools per account, check for duplicate schools and classmates
     #
 
+    print "Trying to find classmates...";
     get_content($findcm_url);
 
     # Using click() instead of submit_form()
@@ -68,12 +74,14 @@ sub find_classmates {
     $mech->form_number(1);
     $mech->set_fields('sf_text_field' => $_[0], 'sf_year_field' => $_[1]);
     my $response = $mech->click();
-    my $content = $response->decoded_content; # Can't apply while (regex) on $response->decoded_content itself
 
+    my $content = $response->decoded_content; # Can't apply while (regex) on $response->decoded_content itself
     my $random = int(rand(10)); # Use the first 10 results, because they make more sense than the others
     my $index = 0;
-    my $high_school;
+
     my $radio_value;
+    my $high_school;    
+
     while($content =~ /id="radio_field" value="(\d+)" \/>(.+?)</g and $random ne 'break') {
         if ($index == $random) {
             $radio_value = $1;
@@ -87,10 +95,9 @@ sub find_classmates {
     $mech->form_number(1);
     $mech->set_fields('radio_field' => $radio_value);
     $response = $mech->click("radio_submit");
-    
-    
-    my @frnd_cb_names;
-    my @frnd_cb_values;
+    print "done!\n" if $mech->success();
+
+    my @friends_cb_names;
 
     my $pages = int(rand(5)); # go through random amount of pages
     for (my $count = 0; $count <= $pages; $count++) {
@@ -104,18 +111,18 @@ sub find_classmates {
         }
 
         while ($content =~ /name="(checkboxids_\d)_uid" value="(\d+)"/g) {
-            push(@frnd_cb_names, $1); # friend checkbox names
-            push(@frnd_cb_values, $2); # friend checkbox values
+            push(@friends_cb_names, $1); # friends checkboxes names
         }
 
-        $random = int(rand(4)); # add $random amount of...
+        $random = int(rand(4)); # $random amount of...
         my $random2 = int(rand(9)); # ...random friends
         $mech->form_number(1);
         my $form = $mech->current_form();
 
+        # we add random amount of random people on each page
         for ($count = 0; $count <= $random; $count++) {
-            $form->find_input($frnd_cb_names[$random2])->check();
-            print "Added one person\n"; # maybe would be cool if we printed the name?
+            $form->find_input($friends_cb_names[$random2])->check();
+            print "Added one person as a friend!\n"; # maybe would be cool if we printed the name?
             $random2 = int(rand(9));
         }
 
@@ -129,10 +136,11 @@ sub find_classmates {
 
 # Subroutine to add the high school to the profile
 sub add_high_school {
+    print "Adding our new school to our profile...";
     get_content('http://m.facebook.com/editprofile/exp/edu/index.php?st=10');
 
     $mech->form_number(1);
-    my $high_school = $_[0]; 
+    my $high_school = $_[0];
     $mech->field('query', $high_school);
     my $response = $mech->click();
 
@@ -144,6 +152,7 @@ sub add_high_school {
     $mech->form_number(1);
     $mech->field('grad_year', $_[1]);
     $mech->click();
+    print "done!\n" if $mech->success();
 }
 
 
