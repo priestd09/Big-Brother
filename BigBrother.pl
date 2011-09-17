@@ -10,8 +10,8 @@ $mech->agent_alias('Linux Mozilla');
 $mech->cookie_jar(HTTP::Cookies->new());
 #$mech->proxy('http', 'http://localhost:8118'); # Use TOR proxy
 
-my $email = 'cepithuj@deagot.com';
-my $password = '19Rutherford84';
+my $email = 'coudraep@deagot.com';
+my $password = 'haidermary';
 
 # We use Facebook for mobile because it's easier to deal with
 my $root_url = 'http://m.facebook.com/';
@@ -58,7 +58,6 @@ sub logout {
 sub find_classmates {
 	#
 	# To do: 
-	# - pick a random classmates 
 	# - if we're gonna add multiple schools per account, check for duplicate schools and classmates
 	#
 
@@ -70,11 +69,7 @@ sub find_classmates {
 	$mech->set_fields('sf_text_field' => $_[0], 'sf_year_field' => $_[1]);
 	my $response = $mech->click();
 	my $content = $response->decoded_content; # Can't apply while (regex) on $response->decoded_content itself
-    
-    # a little better to debug
-    open (FILE, ">response.html");
-	print FILE $content;
-    close (FILE);
+
 	my $random = int(rand(10)); # Use the first 10 results, because they make more sense than the others
 	my $index = 0;
 	my $high_school;
@@ -88,22 +83,48 @@ sub find_classmates {
 		}
 		$index ++;
 	}
-	# This submit part is still broken
+
 	$mech->form_number(1);
 	$mech->set_fields('radio_field' => $radio_value);
 	$response = $mech->click("radio_submit");
     
-    # a little better to debug
-    open (FILE, ">response2.html");
-	print FILE $response->decoded_content;
-    close (FILE);
+    
+    my @frnd_cb_names;
+    my @frnd_cb_values;
 
-	#
-	# We're now at the pick classmates screen (if the above wasn't broken
-	#
+    my $pages = int(rand(5)); # go through random amount of pages
+    for (my $count = 0; $count <= $pages; $count++) {
+        $content = $response->decoded_content;
+
+        if ($content =~ /(We found \d+ people who went to your high school.)/) {
+            print $1. "\n" unless $count; # if it's the first loop, print it out.
+        } else {
+            print "Couldn't find anyone from our high school.";
+            last;
+        }
+
+        while ($content =~ /name="(checkboxids_\d)_uid" value="(\d+)"/g) {
+            push(@frnd_cb_names, $1); # friend checkbox names
+            push(@frnd_cb_values, $2); # friend checkbox values
+        }
+
+        $random = int(rand(4)); # add $random amount of...
+        my $random2 = int(rand(9)); # ...random friends
+        $mech->form_number(1);
+        my $form = $mech->current_form();
+
+        for ($count = 0; $count <= $random; $count++) {
+            $form->find_input($frnd_cb_names[$random2])->check();
+            print "Added one person\n"; # maybe would be cool if we printed the name?
+            $random2 = int(rand(9));
+        }
+
+        # maybe sleep here a bit? would look more human-like.
+        $response = $mech->click("bf_submit");
+    }
 	
 	# Update the profile with the appropriate information
-	#add_high_school($high_school, $_[1]);
+	add_high_school($high_school, $_[1]);
 }
 
 # Subroutine to add the high school to the profile
@@ -122,7 +143,7 @@ sub add_high_school {
 	
 	$mech->form_number(1);
 	$mech->field('grad_year', $_[1]);
-	$response = $mech->click();
+	$mech->click();
 }
 
 
