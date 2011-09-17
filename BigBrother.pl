@@ -10,8 +10,8 @@ $mech->agent_alias('Linux Mozilla');
 $mech->cookie_jar(HTTP::Cookies->new());
 $mech->proxy('http', 'http://localhost:8118'); # Use TOR proxy
 
-my $email = 'username@email.com';
-my $password = 'password';
+my $email = 'cepithuj@deagot.com';
+my $password = '19Rutherford84';
 
 # We use Facebook for mobile because it's easier to deal with
 my $root_url = 'http://m.facebook.com/';
@@ -43,12 +43,8 @@ sub get_content {
 sub login {
 	get_content($index_url);
 
-	my $response = $mech->submit_form(
-	  fields => {
-	    'email' => $_[0],
-	    'pass'  => $_[1]
-	  }
-	);
+	$mech->set_fields('email' => $_[0], 'pass' => $_[1]);
+	$mech->click();
 }
 
 sub logout {
@@ -60,41 +56,62 @@ sub logout {
 }
 
 sub find_classmates {
+	#
+	# To do: 
+	# - pick a random classmates 
+	# - if we're gonna add multiple schools per account, check for duplicate schools and classmates
+	#
+
 	get_content($findcm_url);
 
 	# Using click() instead of submit_form()
 	# From the FAQ: 'Try using $mech->click() instead of $mech->submit() or vice-versa.'
-	#
-	# Proposal: use click() all the time now?
-	#
 	$mech->form_number(1);
 	$mech->set_fields('sf_text_field' => $_[0], 'sf_year_field' => $_[1]);
 	my $response = $mech->click();
+	my $content = $response->decoded_content; # Can't apply while (regex) on $response->decoded_content itself
+	my $random = int(rand(10)); # Use the first 10 results, because they make more sense than the others
+	my $index = 0;
+	my $high_school;
+	my $radio_value;
+	while($content =~ /id="radio_field" value="(\d+)" \/>(.+?)</g and $random ne 'break') {
+		if ($index == $random) {
+			$radio_value = $1;
+			$high_school = $2;
+			$high_school =~ s/&amp;/&/g;
+			$random = 'break';
+		}
+		$index ++;
+	}
+	# This submit part is still broken
+	$mech->form_number(1);
+	$mech->set_fields('radio_field' => $radio_value, 'radio_submit' => 'Find+classmates');
+	$response = $mech->click();
+	print $response->decoded_content."\n";
 	#
-	# To do: pick a random school + classmates 
+	# We're now at the pick classmates screen (if the above wasn't broken
 	#
-	add_high_school();
+	
+	# Update the profile with the appropriate information
+	add_high_school($high_school, $_[1]);
 }
 
 # Subroutine to add the high school to the profile
-#
-# To do: supply randomly picked school and year
-#
 sub add_high_school {
 	get_content('http://m.facebook.com/editprofile/exp/edu/index.php?st=10');
 
 	$mech->form_number(1);
-	my $high_school = 'California High School'; # No supply from find_classmates() yet.
+	my $high_school = $_[0]; 
 	$mech->field('query', $high_school);
 	my $response = $mech->click();
 
+	$high_school =~ s/&/&amp;/g;
 	if ($response->decoded_content =~ /<a href="\/(editprofile.+?)">$high_school/) {
 		get_content($root_url . $1);
 	}
 	
 	$mech->form_number(1);
-	my $grad_year = 2005;
-	$mech->field('grad_year', $grad_year);
+	$mech->field('grad_year', $_[1]);
 	$response = $mech->click();
 }
 
