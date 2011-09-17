@@ -8,7 +8,7 @@ use WWW::Mechanize;
 my $mech = WWW::Mechanize->new;
 $mech->agent_alias('Linux Mozilla');
 $mech->cookie_jar(HTTP::Cookies->new());
-$mech->proxy('http', 'http://localhost:8118'); # Use TOR proxy
+#$mech->proxy('http', 'http://localhost:8118'); # Use TOR proxy
 
 my $email = 'cepithuj@deagot.com';
 my $password = '19Rutherford84';
@@ -70,6 +70,11 @@ sub find_classmates {
 	$mech->set_fields('sf_text_field' => $_[0], 'sf_year_field' => $_[1]);
 	my $response = $mech->click();
 	my $content = $response->decoded_content; # Can't apply while (regex) on $response->decoded_content itself
+    
+    # a little better to debug
+    open (FILE, ">response.html");
+	print FILE $content;
+    close (FILE);
 	my $random = int(rand(10)); # Use the first 10 results, because they make more sense than the others
 	my $index = 0;
 	my $high_school;
@@ -85,15 +90,20 @@ sub find_classmates {
 	}
 	# This submit part is still broken
 	$mech->form_number(1);
-	$mech->set_fields('radio_field' => $radio_value, 'radio_submit' => 'Find+classmates');
-	$response = $mech->click();
-	print $response->decoded_content."\n";
+	$mech->set_fields('radio_field' => $radio_value);
+	$response = $mech->click("radio_submit");
+    
+    # a little better to debug
+    open (FILE, ">response2.html");
+	print FILE $response->decoded_content;
+    close (FILE);
+
 	#
 	# We're now at the pick classmates screen (if the above wasn't broken
 	#
 	
 	# Update the profile with the appropriate information
-	add_high_school($high_school, $_[1]);
+	#add_high_school($high_school, $_[1]);
 }
 
 # Subroutine to add the high school to the profile
@@ -142,3 +152,4 @@ sub post_status {
 	); 
 	die $response->status_line unless $response->status_line;
 }
+
