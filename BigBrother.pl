@@ -9,10 +9,10 @@ $| = 1; # turn autoflush on
 my $mech = WWW::Mechanize->new;
 $mech->agent_alias('Linux Mozilla');
 $mech->cookie_jar(HTTP::Cookies->new());
-$mech->proxy('http', 'http://localhost:8118'); # Use TOR proxy
+#$mech->proxy('http', 'http://localhost:8118'); # Use TOR proxy
 
-my $email = 'cepithuj@deagot.com';
-my $password = '19Rutherford84GS';
+my $email = 'coudraep@deagot.com';
+my $password = 'haidermary';
 
 # We use Facebook for mobile because it's easier to deal with
 my $root_url = 'http://m.facebook.com/';
@@ -20,9 +20,10 @@ my $index_url = $root_url . 'index.php';
 my $profile_url = $root_url . 'profile.php';
 my $findcm_url = $root_url . 'findnetfriends.php'; # which we got from this url
 my $tries = 0;
+my $content;
 
 login($email, $password);
-find_classmates('California', 2005);
+find_classmates('New York', 2009);
 logout();
 
 sub get_content {
@@ -52,7 +53,7 @@ sub login {
 
 sub logout {
     print "Logging out...";
-    my $content = get_content($index_url);
+    $content = get_content($index_url);
 
     if ($content =~ /(logout\.php.+?)"/) {
         get_content($root_url . $1);
@@ -75,7 +76,7 @@ sub find_classmates {
     $mech->set_fields('sf_text_field' => $_[0], 'sf_year_field' => $_[1]);
     my $response = $mech->click();
 
-    my $content = $response->decoded_content; # Can't apply while (<regex>) on $response->decoded_content itself
+    $content = $response->decoded_content; # Can't apply while (<regex>) on $response->decoded_content itself
     my $random = int(rand(10)); # Use the first 10 results, because they make more sense than the others
     my $index = 0;
 
@@ -99,14 +100,14 @@ sub find_classmates {
 
     my @friends_cb_names;
 
-    my $pages = int(rand(5)); # go through random amount of pages
+    my $pages = int(rand(4)); # go through random amount of pages
     for (my $count = 0; $count <= $pages; $count++) {
         $content = $response->decoded_content;
 
         if ($content =~ /(We found \d+ people who went to your high school.)/) {
-            print "    $1\n" unless $count; # if it's the first loop, print it out.
+            print "$1\n" unless $count; # if it's the first loop, print it out.
         } else {
-            print "    Couldn't find anyone from our high school (anymore).\n";
+            print "Couldn't find anyone from our high school (anymore).\n";
             last;
         }
 
@@ -123,19 +124,21 @@ sub find_classmates {
         for ($count = 0; $count <= $random; $count++) {
             #
             # Check for duplicates (by saving the previous values of $random2 and checking for those(?)
+            # ^ No need because with this method, if the input is
+            # already checked, nothig happens. Check out HTML::Form.
             #
             $form->find_input($friends_cb_names[$random2])->check();
             #
             # maybe would be cool if we printed the name?
             #
-            print "    Added one person as a friend!\n";
+            print "\tAdded one person as a friend!\n";
             $random2 = int(rand(9));
         }
         #
         # maybe sleep here a bit? would look more human-like.
         # Got blocked, so yeah.
         #
-        sleep 2;
+        sleep(2);
         $response = $mech->click("bf_submit");
     }
     
@@ -146,9 +149,18 @@ sub find_classmates {
 # Subroutine to add the high school to the profile
 sub add_high_school {
     print "Adding our new school to our profile...";
-    get_content('http://m.facebook.com/editprofile/exp/edu/index.php?st=10');
+    $content = get_content('http://m.facebook.com/editprofile/exp/edu/index.php?st=10');
+    
+    my $high_schools = 0;
+    while ($content =~ /abb acw apm/g) { $high_schools++; }
+    
+    if ($high_schools > 2) {
+        print "failed!\n";
+        print "We have more than 2 high schools in profile, skipping this one!\n";
+        return;
+    }
 
-    # Sebmit the high school name
+    # Submit the high school name
     $mech->form_number(1);
     my $high_school = $_[0];
     $mech->field('query', $high_school);
@@ -188,7 +200,7 @@ sub check_forms {
 
 # no use for this yet but maybe in the future? :)
 sub post_status {
-    my $content = get_content($profile_url);
+    $content = get_content($profile_url);
     my $response = $mech->submit_form(
         fields => { status => shift }
     ); 
